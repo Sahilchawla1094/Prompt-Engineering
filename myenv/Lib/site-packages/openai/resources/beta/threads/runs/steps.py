@@ -17,7 +17,8 @@ from ....._base_client import (
     AsyncPaginator,
     make_request_options,
 )
-from .....types.beta.threads.runs import RunStep, step_list_params
+from .....types.beta.threads.runs import step_list_params
+from .....types.beta.threads.runs.run_step import RunStep
 
 __all__ = ["Steps", "AsyncSteps"]
 
@@ -62,7 +63,7 @@ class Steps(SyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `run_id` but received {run_id!r}")
         if not step_id:
             raise ValueError(f"Expected a non-empty value for `step_id` but received {step_id!r}")
-        extra_headers = {"OpenAI-Beta": "assistants=v1", **(extra_headers or {})}
+        extra_headers = {"OpenAI-Beta": "assistants=v2", **(extra_headers or {})}
         return self._get(
             f"/threads/{thread_id}/runs/{run_id}/steps/{step_id}",
             options=make_request_options(
@@ -119,7 +120,7 @@ class Steps(SyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `thread_id` but received {thread_id!r}")
         if not run_id:
             raise ValueError(f"Expected a non-empty value for `run_id` but received {run_id!r}")
-        extra_headers = {"OpenAI-Beta": "assistants=v1", **(extra_headers or {})}
+        extra_headers = {"OpenAI-Beta": "assistants=v2", **(extra_headers or {})}
         return self._get_api_list(
             f"/threads/{thread_id}/runs/{run_id}/steps",
             page=SyncCursorPage[RunStep],
@@ -182,7 +183,7 @@ class AsyncSteps(AsyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `run_id` but received {run_id!r}")
         if not step_id:
             raise ValueError(f"Expected a non-empty value for `step_id` but received {step_id!r}")
-        extra_headers = {"OpenAI-Beta": "assistants=v1", **(extra_headers or {})}
+        extra_headers = {"OpenAI-Beta": "assistants=v2", **(extra_headers or {})}
         return await self._get(
             f"/threads/{thread_id}/runs/{run_id}/steps/{step_id}",
             options=make_request_options(
@@ -239,7 +240,7 @@ class AsyncSteps(AsyncAPIResource):
             raise ValueError(f"Expected a non-empty value for `thread_id` but received {thread_id!r}")
         if not run_id:
             raise ValueError(f"Expected a non-empty value for `run_id` but received {run_id!r}")
-        extra_headers = {"OpenAI-Beta": "assistants=v1", **(extra_headers or {})}
+        extra_headers = {"OpenAI-Beta": "assistants=v2", **(extra_headers or {})}
         return self._get_api_list(
             f"/threads/{thread_id}/runs/{run_id}/steps",
             page=AsyncCursorPage[RunStep],

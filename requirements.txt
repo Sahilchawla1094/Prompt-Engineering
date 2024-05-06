@@ -1,3 +1,16 @@
 openai
 langchain
+langchain-openai
+langchain-experimental
+langchainhub
+watchdog
+python-dotenv
+tiktoken
+docx2txt
+pypdf
+requests
+pandas
+aiohttp
+PyYAML
+numpy
 streamlit

@@ -98,30 +98,37 @@ def main():
     # Errorcode: AxiosError: Request failed with status code 403
     # streamlit run main.py --server.enableXsrfProtection false
     
+
+
     # File uploader widget
-    uploaded_file = st.file_uploader("Upload your files:", type=['pdf', 'docx', 'txt', 'html', 'csv', 'xlsx'], accept_multiple_files=False)
+    columns = ''
+    uploaded_file = ""
 
-    if uploaded_file:
-        try:
-            # Create a directory for files if it doesn't exist
-            ensure_directory_exists('./files')
+    if input_method == "Upload a file":
+        uploaded_file = st.file_uploader("Upload your files:", type=['pdf', 'docx', 'txt', 'html', 'csv', 'xlsx'], accept_multiple_files=False)
 
-            # Construct file path
-            file_path = os.path.join('./files', uploaded_file.name)
-            
-            # Write file to disk
-            with open(file_path, 'wb') as f:
-                f.write(uploaded_file.getvalue())
-            
-            # Load and process the document
-            columns = load_document(file_path)
-            if columns is not None:
-                st.write("File processed successfully.")
-                # st.write(columns)  # or handle as per your function's return type
-            else:
-                st.error("Unsupported file type or failed to process file.")
-        except Exception as e:
-            st.error(f"Failed to read {uploaded_file.name}: {e}")
+        if uploaded_file:
+            try:
+                # Create a directory for files if it doesn't exist
+                ensure_directory_exists('./files')
+
+                # Construct file path
+                file_path = os.path.join('./files', uploaded_file.name)
+                
+                # Write file to disk
+                with open(file_path, 'wb') as f:
+                    f.write(uploaded_file.getvalue())
+                
+                # Load and process the document
+                columns = load_document(file_path)
+
+                if columns is not None:
+                    st.success("File processed successfully.")
+                    # st.write(columns)  # or handle as per your function's return type
+                else:
+                    st.error("Unsupported file type or failed to process file.")
+            except Exception as e:
+                st.error(f"Failed to read {uploaded_file.name}: {e}")
 
     elif input_method == 'Enter data manually':
         # Manual data input
@@ -135,18 +142,21 @@ def main():
                 st.table(df)
 
     num_records = st.number_input('Enter the number of records you want to generate:', min_value=1, value=10)
+    prompt = ""
 
     # Optional scenario description
     if st.checkbox('I want to provide a scenario description for the dataset'):
         scenario_description = st.text_area("Describe the scenario for which the dataset is being generated:")
-        if scenario_description:
-            st.write("Scenario Description Provided:")
-            st.write(scenario_description)
+        prompt = f"Generate {num_records} records for a dataset with the following columns and types: {columns}. Scenario description: {scenario_description}"
+
+        # if scenario_description:
+            # st.write("Scenario Description Provided:")
+            # st.write(scenario_description)
+    else:
+        prompt =f"Generate {num_records} records for a dataset with the following columns and types: {columns}."
             
     if st.button('Generate Dataset'):
-        with st.spinner('Generating dataset... Please wait'):
-            prompt = f"Generate {num_records} records for a dataset with the following columns and types: {columns}. Scenario description: {scenario_description}"
-            
+        with st.spinner('Generating dataset... Please wait'):            
             # Initialize OpenAI client
             client = OpenAI()
             client.api_key = api_key or os.getenv("OPENAI_API_KEY")

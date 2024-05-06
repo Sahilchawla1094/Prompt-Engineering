@@ -47,7 +47,6 @@ def load_document(file):
     # import json
     # from pathlib import Path
     name, ext = os.path.splitext(file) # file.split('/')[-2], file.split('/')[-1]
-    print(name, ext)
     
     loader = {
         '.pdf': document_loaders.PyPDFLoader(file),
@@ -59,7 +58,7 @@ def load_document(file):
         # '.py': document_loaders.PythonLoader(file), # security concerns
         # '.json': json.loads(Path(file).read_text())
     } # url of the file or file path in a file system
-
+    
     if ext not in loader.keys():
         print("Extension Doesn't Exists!")
         return None
@@ -67,7 +66,7 @@ def load_document(file):
     if ext == '.json':
         return loader[ext]
     
-    print(f"Loading the '{file}'")
+    # print(f"Loading the '{file}'")
     data = loader[ext].load_and_split() if ext == '.pdf' else loader[ext].load() # this will return a list of langchain documents, one document for each page
     return data # data is splitted by pages and we can use indexes to display a specific page
 

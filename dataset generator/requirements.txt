@@ -7,9 +7,11 @@ pandas
 python-dotenv
 tiktoken
 docx2txt
+pypdf
 PyPDF2
-PyPDF4
 aiohttp
 PyYAML
 beautifulsoup4
 openpyxl
+unstructured
+networkx

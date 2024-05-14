@@ -92,6 +92,7 @@ def main():
                 st.error('Invalid API Key')
 
     # Choose input method
+    # api_key = "sk-proj-ajwKgSgObQnPITkIdZuyT3BlbkFJNU2KLr6Ozk7ZyVeVxuHn"
     input_method = st.radio("Choose your input method:", ['Upload a file', 'Enter data manually'])
 
     # File uploader widget
@@ -101,6 +102,7 @@ def main():
 
 
     # File uploader widget
+    prompt = ''
     columns = ''
     uploaded_file = ""
 
@@ -121,7 +123,7 @@ def main():
                 
                 # Load and process the document
                 columns = load_document(file_path)
-
+                
                 if columns is not None:
                     st.success("File processed successfully.")
                     # st.write(columns)  # or handle as per your function's return type
@@ -129,6 +131,8 @@ def main():
                     st.error("Unsupported file type or failed to process file.")
             except Exception as e:
                 st.error(f"Failed to read {uploaded_file.name}: {e}")
+                
+            
 
     elif input_method == 'Enter data manually':
         # Manual data input
@@ -147,23 +151,32 @@ def main():
     # Optional scenario description
     if st.checkbox('I want to provide a scenario description for the dataset'):
         scenario_description = st.text_area("Describe the scenario for which the dataset is being generated:")
-        prompt = f"Generate {num_records} records for a dataset with the following columns and types: {columns}. Scenario description: {scenario_description}"
+        if input_method == "Upload a file":
+            prompt = f"Analyse the dataset and take the reference to generate new data points \n{columns}"
+        else:
+            prompt = f"Generate {num_records} records for a dataset with the following columns and types: {columns}"
+        prompt += f". Scenario description: {scenario_description}"
 
         # if scenario_description:
             # st.write("Scenario Description Provided:")
             # st.write(scenario_description)
     else:
-        prompt =f"Generate {num_records} records for a dataset with the following columns and types: {columns}."
-            
+        if input_method == "Upload a file":
+            prompt = f"Analyse the dataset and take the reference to generate new data points \n{columns}"
+        else:
+            prompt = f"Generate {num_records} records for a dataset with the following columns and types: {columns}"
+    
+    # print("Prompt: ",prompt)
+    
     if st.button('Generate Dataset'):
         with st.spinner('Generating dataset... Please wait'):            
             # Initialize OpenAI client
             client = OpenAI()
             client.api_key = api_key or os.getenv("OPENAI_API_KEY")
-
+            
             # Sending prompt to OpenAI's GPT-3.5-turbo
             completion = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4-turbo",
                 response_format={"type": "json_object"},
                 messages=[
                     {"role": "system", "content": "You are responsible for dataset generation and designed to output in JSON format."},
@@ -174,8 +187,10 @@ def main():
             try:
                 # Parsing the JSON data from the response
                 response = completion.choices[0].message.content.strip()  # Getting the actual text response
+                
                 # st.write("Raw response:", response)  # Display raw response for debugging
                 response_data = json.loads(response)  # Parse the complete JSON string
+                
                 # st.write("Parsed JSON:", response_data)  # Display parsed JSON for debugging
 
                 # Check if the JSON response is a dictionary containing an array or a direct array
@@ -197,11 +212,14 @@ def main():
                     return
 
                 df = pd.DataFrame(data)
+                
+                # Convert DataFrame to CSV for download
+                csv = df.to_csv(index=False).encode('utf-8')
+                
                 st.write("Preview of the first 5 records:")
                 st.dataframe(df.head())
 
-                # Convert DataFrame to CSV for download
-                csv = df.to_csv(index=False).encode('utf-8')
+                print(csv)
                 st.download_button("Download Dataset", csv, "synthetic_data.csv", "text/csv", key='download-csv')
             except Exception as e:
                 st.error(f"Error processing data: {e}")

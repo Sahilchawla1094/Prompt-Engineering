@@ -1,6 +1,15 @@
-Row ID,Order ID,Order Date,Ship Date,Ship Mode,Customer ID,Customer Name
-7981,CA-2011-103800,03/01/13,07/01/13,Standard Class,DP-13000,Darren Powers
-740,CA-2011-112326,04/01/13,08/01/13,Standard Class,PO-19195,Phillina Ober
-741,CA-2011-112326,04/01/13,08/01/13,Standard Class,PO-19195,Phillina Ober
-742,CA-2011-112326,04/01/13,08/01/13,Standard Class,PO-19195,Phillina Ober
-1760,CA-2011-141817,05/01/13,12/01/13,Standard Class,MB-18085,Mick Brown
+Row ID,Order ID,Order Date,Ship Date,Ship Mode,Customer ID,Customer Name,Segment,Country,City,State,Postal Code,Region,Product ID,Category,Sub-Category,Product Name,Sales,Quantity,Discount,Profit
+7981,CA-2011-103800,03-01-2013,07-01-2013,Standard Class,DP-13000,Darren Powers,Consumer,United States,Houston,Texas,77095,Central,OFF-PA-10000174,Office Supplies,Paper,"Message Book, Wirebound, Four 5 1/2"" X 4"" Forms/Pg., 200 Dupl. Sets/Book",16.448,2,0.2,5.5512
+740,CA-2011-112326,04-01-2013,08-01-2013,Standard Class,PO-19195,Phillina Ober,Home Office,United States,Naperville,Illinois,60540,Central,OFF-LA-10003223,Office Supplies,Labels,Avery 508,11.784,3,0.2,4.2717
+741,CA-2011-112326,04-01-2013,08-01-2013,Standard Class,PO-19195,Phillina Ober,Home Office,United States,Naperville,Illinois,60540,Central,OFF-ST-10002743,Office Supplies,Storage,SAFCO Boltless Steel Shelving,272.736,3,0.2,-64.7748
+742,CA-2011-112326,04-01-2013,08-01-2013,Standard Class,PO-19195,Phillina Ober,Home Office,United States,Naperville,Illinois,60540,Central,OFF-BI-10004094,Office Supplies,Binders,GBC Standard Plastic Binding Systems Combs,3.54,2,0.8,-5.487
+1760,CA-2011-141817,05-01-2013,12-01-2013,Standard Class,MB-18085,Mick Brown,Consumer,United States,Philadelphia,Pennsylvania,19143,East,OFF-AR-10003478,Office Supplies,Art,"Avery Hi-Liter EverBold Pen Style Fluorescent Highlighters, 4/Pack",19.536,3,0.2,4.884
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,

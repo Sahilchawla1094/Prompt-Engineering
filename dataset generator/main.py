@@ -168,7 +168,9 @@ def main():
                 client.api_key = api_key or os.getenv("OPENAI_API_KEY")
             elif api_provider == "Azure":
                 # Initialize Azure OpenAI client
-                client = AzureOpenAI(azure_endpoint=os.getenv("azure_oai_endpoint"), api_key=os.getenv("azure_oai_endpoint"), api_version="turbo-2024-04-09")
+                client = AzureOpenAI(azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"), api_key=os.getenv("AZURE_OPENAI_API_KEY"), api_version="turbo-2024-04-09")
+            
+            prompt = f"Generate {num_records}: {columns}"
             
             total_data = []
             records_per_batch = 10  # Adjust based on trial and error

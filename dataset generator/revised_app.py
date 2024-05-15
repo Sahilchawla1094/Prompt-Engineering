@@ -8,11 +8,22 @@ from langchain_experimental.tabular_synthetic_data.openai import create_openai_d
 from langchain_experimental.tabular_synthetic_data.prompts import SYNTHETIC_FEW_SHOT_SUFFIX, SYNTHETIC_FEW_SHOT_PREFIX
 
 # Set API Key securely
+api_key = ""
+azure_endpoint = ""
+
 st.set_page_config(page_title="Synthetic Data Generator")
-st.sidebar.title("Settings")
-api_key = st.sidebar.text_input("Enter your OpenAI API Key", type="password")
-if api_key:
-    os.environ["OPENAI_API_KEY"] = api_key
+with st.sidebar.title("Settings"):
+    api_provider = st.selectbox('Select your API provider:', ['OpenAI', 'Azure OpenAI'])
+
+    if api_provider == "Azure OpenAI":
+        api_key = st.sidebar.text_input("API Key", type="password")
+        azure_endpoint = st.sidebar.text_input("Azure OpenAI Endpoint")
+        os.environ["OPENAI_API_KEY"] = api_key  # 4b81012d55fb416c9e398f6149c3071e
+        os.environ["AZURE_OPENAI_ENDPOINT"] = azure_endpoint # https://ey-sandbox.openai.azure.com/
+    elif api_provider == "OpenAI":
+        api_key = st.sidebar.text_input("API Key", type="password")
+        os.environ["OPENAI_API_KEY"] = api_key  # sk-proj-ajwKgSgObQnPITkIdZuyT3BlbkFJNU2KLr6Ozk7ZyVeVxuHn
+    
 
 # Upload CSV file
 uploaded_file = st.file_uploader("Upload your CSV file", type=['csv'])

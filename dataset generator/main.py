@@ -1,213 +1,97 @@
-import streamlit as st
 import os
 import pandas as pd
 import requests
-from openai import OpenAI
 import json
-from dotenv import find_dotenv, load_dotenv
+import streamlit as st
+from dotenv import load_dotenv, find_dotenv
 
-# Api keys 
-file = './.env' # new path to store new api_keys
-keys = find_dotenv(file,raise_error_if_not_found=True)
-load_dotenv(keys, override=True)
+# Setup environment
+load_dotenv(find_dotenv())
 
-# Verification
-def verify_api_key(api_key, provider):
-    headers = {
-        "Authorization": f"Bearer {api_key}"
-    }
-    
-    if provider == "OpenAI":
-        # Example endpoint for OpenAI
-        url = "https://api.openai.com/v1/models"
-    elif provider == "Google API":
-        # Example Google API endpoint
-        url = "https://www.googleapis.com/auth/cloud-platform"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
-    else:
-        return False
-
+# Verification of API Key using Azure OpenAI
+def verify_api_key(api_key, endpoint):
+    headers = {"Authorization": f"Bearer {api_key}"}
+    url = f"{endpoint}/v1/engines"  # Example endpoint to list available engines
     try:
         response = requests.get(url, headers=headers)
         return response.status_code == 200
     except Exception as e:
-        print(f"Error verifying API key for {provider}: {str(e)}")
+        st.error(f"Error verifying API key with Azure OpenAI: {str(e)}")
         return False
 
-# Load the document
-def load_document(file):
-    """Functions links the PDFs using library called PyPDF into an array of documents where each document contains the page, content and metadata with a page number."""
-    # prevent from circular dependencies and benefit from a more reliable refactoring of our code. | if we utilize the function and it will work because it contains everthing it int
-    # from langchain.document_loaders import PyPDFLoader 
+# File loading based on extension
+def load_document(file_path):
     from langchain_community import document_loaders
-    
-    # import json
-    # from pathlib import Path
-    name, ext = os.path.splitext(file) # file.split('/')[-2], file.split('/')[-1]
-    
-    loader = {
-        '.pdf': document_loaders.PyPDFLoader(file),
-        '.docx': document_loaders.Docx2txtLoader(file),
-        '.txt': document_loaders.TextLoader(file),
-        '.xlsx': document_loaders.UnstructuredExcelLoader(file, mode="elements"),
-        '.csv': document_loaders.CSVLoader(file),
-        '.html': document_loaders.BSHTMLLoader(file), # UnstructuredHTMLLoader(file)
-        # '.py': document_loaders.PythonLoader(file), # security concerns
-        # '.json': json.loads(Path(file).read_text())
-    } # url of the file or file path in a file system
-    
-    if ext not in loader.keys():
-        print("Extension Doesn't Exists!")
+    ext = os.path.splitext(file_path)[-1]
+    loader_map = {
+        '.pdf': document_loaders.PyPDFLoader,
+        '.docx': document_loaders.Docx2txtLoader,
+        '.txt': document_loaders.TextLoader,
+        '.xlsx': document_loaders.UnstructuredExcelLoader,
+        '.csv': document_loaders.CSVLoader,
+        '.html': document_loaders.BSHTMLLoader,
+    }
+    if ext in loader_map:
+        return loader_map[ext](file_path).load()
+    else:
+        st.error("Unsupported file type.")
         return None
-    
-    if ext == '.json':
-        return loader[ext]
-    
-    # print(f"Loading the '{file}'")
-    data = loader[ext].load_and_split() if ext == '.pdf' else loader[ext].load() # this will return a list of langchain documents, one document for each page
-    return data # data is splitted by pages and we can use indexes to display a specific page
 
-# Define the function to ensure the directory exists
-def ensure_directory_exists(directory):
-    """Ensure the specified directory exists, create it if it does not."""
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
+# Main function with Streamlit UI
 def main():
     st.title('Synthetic Dataset Generator')
-
-    # Select API provider
-    api_provider = st.selectbox('Select your API provider:', ['Select an API', 'OpenAI', 'Google API'])
-    
-    # Conditional rendering of API Key input based on provider selection
-    if api_provider != 'Select an API':
+    api_provider = st.selectbox('Select your API provider:', ['Select an API', 'Azure OpenAI'])
+    api_key = ''
+    endpoint = ''
+    if api_provider == 'Azure OpenAI':
         api_key = st.text_input('Enter your API Key:', type="password")
+        endpoint = st.text_input('Enter your Endpoint URL:')
         if st.button('Verify API Key'):
-            if api_key and verify_api_key(api_key, api_provider):
+            if api_key and endpoint and verify_api_key(api_key, endpoint):
                 st.success('API Key verified!')
             else:
-                st.error('Invalid API Key')
+                st.error('Invalid API Key or Endpoint')
 
-    # Choose input method
     input_method = st.radio("Choose your input method:", ['Upload a file', 'Enter data manually'])
-
-    # File uploader widget
-    # Errorcode: AxiosError: Request failed with status code 403
-    # streamlit run main.py --server.enableXsrfProtection false
-    
-
-
-    # File uploader widget
     columns = ''
-    uploaded_file = ""
-
     if input_method == "Upload a file":
-        uploaded_file = st.file_uploader("Upload your files:", type=['pdf', 'docx', 'txt', 'html', 'csv', 'xlsx'], accept_multiple_files=False)
-
+        uploaded_file = st.file_uploader("Upload your file:", type=['pdf', 'docx', 'txt', 'html', 'csv', 'xlsx'])
         if uploaded_file:
-            try:
-                # Create a directory for files if it doesn't exist
-                ensure_directory_exists('./files')
-
-                # Construct file path
-                file_path = os.path.join('./files', uploaded_file.name)
-                
-                # Write file to disk
-                with open(file_path, 'wb') as f:
-                    f.write(uploaded_file.getvalue())
-                
-                # Load and process the document
-                columns = load_document(file_path)
-
-                if columns is not None:
-                    st.success("File processed successfully.")
-                    # st.write(columns)  # or handle as per your function's return type
-                else:
-                    st.error("Unsupported file type or failed to process file.")
-            except Exception as e:
-                st.error(f"Failed to read {uploaded_file.name}: {e}")
-
-    elif input_method == 'Enter data manually':
-        # Manual data input
-        columns = st.text_area("Enter column names and types separated by commas (e.g., name\:str, age\:int, salary\:float)")
-        if columns:
-            col_list = [col.strip().split(':') for col in columns.split(',') if ':' in col]
-            if col_list:
-                st.write("Columns specified:")
-                # Create a dataframe to display the columns in table format
-                df = pd.DataFrame(col_list, columns=['Column Name', 'Type'])
-                st.table(df)
+            file_path = os.path.join('./files', uploaded_file.name)
+            with open(file_path, 'wb') as f:
+                f.write(uploaded_file.getvalue())
+            document = load_document(file_path)
+            if document:
+                st.success("File processed successfully.")
+                columns = str(document)  # Assuming the document loader returns metadata or text that can be useful
+    else:
+        columns = st.text_area("Enter column names and types separated by commas (e.g., name:str, age:int, salary:float)")
 
     num_records = st.number_input('Enter the number of records you want to generate:', min_value=1, value=10)
-    prompt = ""
-
-    # Optional scenario description
-    if st.checkbox('I want to provide a scenario description for the dataset'):
+    if st.checkbox('Provide a scenario description'):
         scenario_description = st.text_area("Describe the scenario for which the dataset is being generated:")
-        prompt = f"Generate {num_records} records for a dataset with the following columns and types: {columns}. Scenario description: {scenario_description}"
-
-        # if scenario_description:
-            # st.write("Scenario Description Provided:")
-            # st.write(scenario_description)
+        prompt = f"Generate {num_records} records for a dataset with columns: {columns}. Scenario: {scenario_description}"
     else:
-        prompt =f"Generate {num_records} records for a dataset with the following columns and types: {columns}."
-            
+        prompt = f"Generate {num_records} records for a dataset with columns: {columns}."
+
     if st.button('Generate Dataset'):
-        with st.spinner('Generating dataset... Please wait'):            
-            # Initialize OpenAI client
-            client = OpenAI()
-            client.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        st.spinner('Generating dataset... Please wait')
+        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        data = {
+            "model": "davinci",  # Example model, adjust as needed
+            "prompt": prompt,
+            "max_tokens": 1024
+        }
+        response = requests.post(f"{endpoint}/v1/completions", headers=headers, json=data)
 
-            # Sending prompt to OpenAI's GPT-3.5-turbo
-            completion = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                response_format={"type": "json_object"},
-                messages=[
-                    {"role": "system", "content": "You are responsible for dataset generation and designed to output in JSON format."},
-                    {"role": "user", "content": prompt}
-                ]
-            )
-
-            try:
-                # Parsing the JSON data from the response
-                response = completion.choices[0].message.content.strip()  # Getting the actual text response
-                # st.write("Raw response:", response)  # Display raw response for debugging
-                response_data = json.loads(response)  # Parse the complete JSON string
-                # st.write("Parsed JSON:", response_data)  # Display parsed JSON for debugging
-
-                # Check if the JSON response is a dictionary containing an array or a direct array
-                if isinstance(response_data, dict):
-                    # Try to find the first list in the dictionary values and assume it's the dataset
-                    for key, value in response_data.items():
-                        if isinstance(value, list):
-                            data = value
-                            break
-                    else:
-                        st.error("No list found in the JSON object.")
-                        # st.stop()
-                        return
-                elif isinstance(response_data, list):
-                    data = response_data  # Directly use the list as data
-                else:
-                    st.error("JSON does not contain a list or an object containing a list.")
-                    # st.stop()
-                    return
-
-                df = pd.DataFrame(data)
-                st.write("Preview of the first 5 records:")
-                st.dataframe(df.head())
-
-                # Convert DataFrame to CSV for download
-                csv = df.to_csv(index=False).encode('utf-8')
-                st.download_button("Download Dataset", csv, "synthetic_data.csv", "text/csv", key='download-csv')
-            except Exception as e:
-                st.error(f"Error processing data: {e}")
-                # st.stop()
-                return
-
+        try:
+            data = json.loads(response.text)
+            df = pd.DataFrame(data['choices'][0]['text'])
+            st.dataframe(df.head())
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button("Download Dataset", csv, "synthetic_data.csv", "text/csv", key='download-csv')
+        except Exception as e:
+            st.error(f"Failed to generate dataset: {e}")
 
 if __name__ == "__main__":
     main()

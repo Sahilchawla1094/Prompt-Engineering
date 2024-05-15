@@ -15,3 +15,5 @@ beautifulsoup4
 openpyxl
 unstructured
 networkx
+llama-index
+langchain-community
